@@ -1,0 +1,6 @@
+@MedisysCitasApi_HostAddress = http://localhost:5276
+
+GET {{MedisysCitasApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
