@@ -42,14 +42,15 @@ namespace MedisysCitasApi.Controllers
             }
         }
 
-        // GET: api/citas
+        //GET: api/citas
         [HttpGet]
         public async Task<IActionResult> ObtenerTodasLasCitas()
         {
             var citas = new List<Cita>();
 
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            using var command = new SqlCommand("SELECT * FROM Citas", connection);
+            using var command = new SqlCommand("ObtenerTodasLasCitas", connection);
+            command.CommandType = CommandType.StoredProcedure;
 
             try
             {
@@ -77,29 +78,39 @@ namespace MedisysCitasApi.Controllers
             }
         }
 
+
+
         // PUT: api/citas/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarCita(int id, [FromBody] Cita cita)
         {
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            using var command = new SqlCommand("ActualizarCita", connection);
+            using var command = new SqlCommand("ActualizarCita2", connection);
             command.CommandType = CommandType.StoredProcedure;
 
             command.Parameters.AddWithValue("@IdCita", id);
+            command.Parameters.AddWithValue("@NuevoPacienteId", cita.PacienteId);
+            command.Parameters.AddWithValue("@NuevoDoctorId", cita.DoctorId);
+            command.Parameters.AddWithValue("@NuevoConsultorioId", cita.ConsultorioId);
             command.Parameters.AddWithValue("@NuevaFecha", cita.FechaCita);
             command.Parameters.AddWithValue("@NuevoEstado", cita.Estado);
 
             try
             {
                 await connection.OpenAsync();
-                await command.ExecuteNonQueryAsync();
-                return Ok(new { message = "Cita actualizada correctamente" });
+                int filasAfectadas = await command.ExecuteNonQueryAsync();
+
+                if (filasAfectadas > 0)
+                    return Ok(new { message = "Cita actualizada correctamente" });
+                else
+                    return NotFound(new { message = "Cita no encontrada" });
             }
             catch (SqlException ex)
             {
                 return BadRequest(new { error = ex.Message });
             }
         }
+
 
         // DELETE: api/citas/{id}
         [HttpDelete("{id}")]
